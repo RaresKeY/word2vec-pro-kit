@@ -1,5 +1,6 @@
 data/
 word2vec_sampled_50m.pth
 word2vec_sampled_50m.safetensors
+*.vocab.pth
 
 .venv
