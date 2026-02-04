@@ -6,6 +6,35 @@ import sys
 import warnings
 from safetensors.torch import load_file
 
+# --- Model Download ---
+# Check for model files and download if they are missing.
+def check_and_download_models():
+    """Checks for model files and downloads them if missing."""
+    required_files = [
+        "word2vec_sampled_50m.safetensors",
+        "data/sampled_50m.txt.vocab.pth"
+    ]
+    
+    missing_files = [f for f in required_files if not os.path.exists(f)]
+    
+    if missing_files:
+        print("Model files not found. Attempting to download...")
+        try:
+            from download_model import download_project_model
+            if not download_project_model():
+                print("\nDownload failed. Please check your internet connection or run the download script manually.")
+                sys.exit(1)
+        except ImportError:
+            print("\nError: 'download_model.py' not found. Please ensure it's in the same directory.")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\nAn unexpected error occurred during download: {e}")
+            sys.exit(1)
+
+# Automatically run the check when the script is executed
+check_and_download_models()
+# --- End Model Download ---
+
 # Suppress the specific torch load warning to keep output clean
 warnings.filterwarnings("ignore", category=FutureWarning)
 
