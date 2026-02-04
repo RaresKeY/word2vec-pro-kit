@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 # Configuration
 OUTPUT_DIR = "data/raw_parts"
-# Default target: 190GB (200GB Max with 10GB buffer)
-TARGET_SIZE_GB = 190 
+# Default target: 20GB (20GB Max with 10GB buffer)
+TARGET_SIZE_GB = 20
 
 # Global lock is less needed for tqdm internal locks, but good for pure prints
 print_lock = threading.Lock()
@@ -19,7 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description="Download Golden Trio Datasets (Parallel)")
     parser.add_argument("--test", action="store_true", help="Run in test mode (download 20MB max per dataset)")
     parser.add_argument("--workers", type=int, default=16, help="Number of parallel downloads")
-    parser.add_argument("--limit_per_dataset", type=int, default=500, help="Limit per dataset in MB (Default: 500MB)")
+    parser.add_argument("--limit_per_dataset", type=int, default=5000, help="Limit per dataset in MB (Default: 5000MB)")
     parser.add_argument("--output_dir", type=str, default="data/raw_parts", help="Where to save the data")
     args = parser.parse_args()
 
