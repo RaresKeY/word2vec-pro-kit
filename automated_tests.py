@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import warnings
+from safetensors.torch import load_file
 
 # Suppress the specific torch load warning to keep output clean
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -23,17 +24,38 @@ class Word2VecEvaluator:
         device = torch.device("cpu") # CPU is sufficient for evaluation
         
         try:
-            # Load checkpoint
-            checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+            if checkpoint_path.endswith(".safetensors"):
+                # 1. Load weights from safetensors
+                state_dict = load_file(checkpoint_path, device="cpu")
+                
+                # 2. Load vocab from cache (required for safetensors as it only stores weights)
+                vocab_paths = [
+                    "data/sampled_50m.txt.vocab.pth",
+                    checkpoint_path.replace(".safetensors", ".vocab.pth"),
+                    "word2vec_sampled_50m.pth" 
+                ]
+                
+                vocab_found = False
+                for vp in vocab_paths:
+                    if os.path.exists(vp):
+                        print(f"Loading vocabulary from: {vp}")
+                        vocab_data = torch.load(vp, map_location=device, weights_only=False)
+                        self.vocab = vocab_data['vocab']
+                        self.idx_to_word = vocab_data['idx_to_word']
+                        vocab_found = True
+                        break
+                
+                if not vocab_found:
+                    print("Error: Could not find vocabulary file for .safetensors model.")
+                    sys.exit(1)
+            else:
+                # Load legacy .pth checkpoint
+                checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+                self.vocab = checkpoint['vocab']
+                self.idx_to_word = checkpoint['idx_to_word']
+                state_dict = checkpoint['model_state_dict']
             
-            # 1. Extract Vocab
-            self.vocab = checkpoint['vocab']
-            self.idx_to_word = checkpoint['idx_to_word']
-            
-            # 2. Extract Weights
-            # We need to handle both 'Legacy' and 'Modern' architectures
-            state_dict = checkpoint['model_state_dict']
-            
+            # 3. Extract Weights
             if 'in_embeddings.weight' in state_dict:
                 # Modern Architecture (Negative Sampling)
                 self.embeddings = state_dict['in_embeddings.weight'].numpy()
@@ -42,14 +64,12 @@ class Word2VecEvaluator:
                 self.embeddings = state_dict['embeddings.weight'].numpy()
             else:
                 print("Error: Could not find embeddings in checkpoint.")
-                print(f"Available keys: {state_dict.keys()}")
+                print(f"Available keys: {list(state_dict.keys())}")
                 sys.exit(1)
                 
             print(f"Model Loaded. Vocab Size: {len(self.vocab)}, Dimensions: {self.embeddings.shape[1]}")
             
-            # 3. Pre-normalize vectors for fast Cosine Similarity
-            # Formula: (A . B) / (|A| * |B|)
-            # If we normalize A and B to length 1 first, it becomes just (A . B)
+            # 4. Pre-normalize vectors for fast Cosine Similarity
             norm = np.linalg.norm(self.embeddings, axis=1, keepdims=True)
             norm[norm == 0] = 1e-10 # Avoid division by zero
             self.normalized_embeddings = self.embeddings / norm
@@ -292,13 +312,23 @@ def run_suite(evaluator):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Automated Word2Vec Tests")
-    parser.add_argument("checkpoint", type=str, help="Path to .pth file", nargs='?', default="word2vec_sampled_50m.pth")
+    parser.add_argument("checkpoint", type=str, help="Path to model file (.safetensors or .pth)", nargs='?')
     args = parser.parse_args()
 
-    if not os.path.exists(args.checkpoint):
-        print(f"Checkpoint file '{args.checkpoint}' not found.")
-        print("Usage: python automated_tests.py <path_to_checkpoint.pth>")
+    checkpoint = args.checkpoint
+    if checkpoint is None:
+        # Default behavior: try safetensors first, then pth
+        if os.path.exists("word2vec_sampled_50m.safetensors"):
+            checkpoint = "word2vec_sampled_50m.safetensors"
+        elif os.path.exists("word2vec_sampled_50m.pth"):
+            checkpoint = "word2vec_sampled_50m.pth"
+        else:
+            print("Error: No default model found (checked .safetensors and .pth)")
+            sys.exit(1)
+
+    if not os.path.exists(checkpoint):
+        print(f"Checkpoint file '{checkpoint}' not found.")
         sys.exit(1)
 
-    evaluator = Word2VecEvaluator(args.checkpoint)
+    evaluator = Word2VecEvaluator(checkpoint)
     run_suite(evaluator)

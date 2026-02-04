@@ -50,3 +50,14 @@ Standard optimizers (like Adam) update every single number in the brain every ba
 
 ### Our Solution: Sparse Gradients
 We use `SparseAdam`. It only calculates and updates the vectors for the words that **actually appeared** in the current batch. This reduces memory traffic and speeds up the "Optimizer Step" significantly.
+
+---
+
+## 6. Secure & Fast Storage (Safetensors)
+Traditionally, PyTorch models are saved using `pickle`, which can execute malicious code when loaded and is slow for large files.
+
+### Our Solution: Zero-Copy Safetensors
+We transition to the `.safetensors` format for weight storage.
+*   **Security:** It is a restricted format that only stores raw tensor data, making it impossible to hide malicious scripts.
+*   **Speed:** It uses memory-mapping, allowing the OS to load parts of the model only when they are needed, without copying data into RAM.
+*   **Decoupled Metadata:** Since `.safetensors` is strictly for tensors, we store our vocabulary mapping in a companion `.vocab.pth` file. This separation ensures the model weights remain standard and clean.

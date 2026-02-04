@@ -12,13 +12,14 @@ import argparse
 from tqdm import tqdm
 import sys
 import multiprocessing as mp
+from safetensors.torch import save_file
 
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
 RAW_DATA_DIR = "data/raw_parts"
 SAMPLED_FILE = "data/sampled_50m.txt"
-DEFAULT_MODEL_SAVE_PATH = "word2vec_sampled_50m.pth"
+DEFAULT_MODEL_SAVE_PATH = "word2vec_sampled_50m.safetensors"
 
 TARGET_TOTAL_WORDS = 50_000_000
 VOCAB_SIZE = 100000 
@@ -289,8 +290,19 @@ def main():
         if i is not None:
             print(f"Epoch {epoch+1} Stats: Avg Loss {total_loss/(i+1):.4f}")
 
-    torch.save({'model_state_dict':model.state_dict(), 'vocab':vocab, 'idx_to_word':idx_to_word, 'embedding_dim':300}, args.save_path)
-    print(f"Training Complete! Final Model: {args.save_path}")
+    if args.save_path.endswith(".safetensors"):
+        # Safetensors only supports flat tensors, so we save vocab separately if it's not already cached
+        save_file(model.state_dict(), args.save_path)
+        
+        # Save companion vocab file for the model
+        vocab_path = args.save_path.replace(".safetensors", ".vocab.pth")
+        torch.save({'vocab':vocab, 'idx_to_word':idx_to_word, 'embedding_dim':300}, vocab_path)
+        print(f"Model saved to {args.save_path}")
+        print(f"Vocabulary saved to {vocab_path}")
+    else:
+        # Legacy .pth save
+        torch.save({'model_state_dict':model.state_dict(), 'vocab':vocab, 'idx_to_word':idx_to_word, 'embedding_dim':300}, args.save_path)
+        print(f"Training Complete! Final Model: {args.save_path}")
 
 if __name__ == "__main__":
     main()
