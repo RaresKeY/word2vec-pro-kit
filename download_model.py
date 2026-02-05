@@ -25,7 +25,7 @@ def download_file(url, dest_path):
 def download_project_model():
     repo_url = "https://huggingface.co/LogicLark-QuantumQuill/static-embeddings-en-50m-v1/resolve/main"
     files = {
-        "word2vec_sampled_50m.safetensors": "word2vec_sampled_50m.safetensors",
+        "word2vec_sampled_50m_pruned.safetensors": "word2vec_sampled_50m_pruned.safetensors",
         "sampled_50m.txt.vocab.pth": "data/sampled_50m.txt.vocab.pth"
     }
     

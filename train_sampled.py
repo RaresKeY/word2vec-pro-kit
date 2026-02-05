@@ -22,10 +22,10 @@ SAMPLED_FILE = "data/sampled_50m.txt"
 DEFAULT_MODEL_SAVE_PATH = "word2vec_sampled_50m.safetensors"
 
 TARGET_TOTAL_WORDS = 50_000_000
-VOCAB_SIZE = 100000 
-CONTEXT_SIZE = 5      
-BATCH_SIZE = 131072    # Targeted for 6-7GB VRAM on 11GB Card
-EPOCHS_DEFAULT = 10    
+VOCAB_SIZE = 100000
+CONTEXT_SIZE = 5
+BATCH_SIZE = 131072
+EPOCHS_DEFAULT = 10
 N_NEGATIVES = 15
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
