@@ -7,4 +7,5 @@ word2vec_sampled_50m_pruned_fp16.safetensors
 
 prune_embeddings.py
 
+__pycache__/
 .venv
