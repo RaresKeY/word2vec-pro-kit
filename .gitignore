@@ -2,6 +2,7 @@ data/
 word2vec_sampled_50m.pth
 word2vec_sampled_50m.safetensors
 word2vec_sampled_50m_pruned.safetensors
+word2vec_sampled_50m_pruned_fp16.safetensors
 *.vocab.pth
 
 prune_embeddings.py

@@ -11,7 +11,7 @@ from safetensors.torch import load_file
 def check_and_download_models():
     """Checks for model files and downloads them if missing."""
     required_files = [
-        "word2vec_sampled_50m_pruned.safetensors",
+        "word2vec_sampled_50m_pruned_fp16.safetensors",
         "data/sampled_50m.txt.vocab.pth"
     ]
     
