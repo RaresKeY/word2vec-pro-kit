@@ -6,14 +6,14 @@ import sys
 import warnings
 from safetensors.torch import load_file
 
+MODEL = "word2vec_sampled_50m_pruned_fp16.safetensors"
+VOCAB = "data/sampled_50m.txt.vocab.pth"
+
 # --- Model Download ---
 # Check for model files and download if they are missing.
 def check_and_download_models():
     """Checks for model files and downloads them if missing."""
-    required_files = [
-        "word2vec_sampled_50m_pruned_fp16.safetensors",
-        "data/sampled_50m.txt.vocab.pth"
-    ]
+    required_files = [MODEL,VOCAB]
     
     missing_files = [f for f in required_files if not os.path.exists(f)]
     
@@ -59,7 +59,7 @@ class Word2VecEvaluator:
                 
                 # 2. Load vocab from cache (required for safetensors as it only stores weights)
                 vocab_paths = [
-                    "data/sampled_50m.txt.vocab.pth",
+                    VOCAB,
                     checkpoint_path.replace(".safetensors", ".vocab.pth"),
                     "word2vec_sampled_50m.pth" 
                 ]
@@ -304,10 +304,10 @@ if __name__ == "__main__":
     checkpoint = args.checkpoint
     if checkpoint is None:
         # Default behavior: try safetensors first, then pth
-        if os.path.exists("word2vec_sampled_50m.safetensors"):
-            checkpoint = "word2vec_sampled_50m.safetensors"
-        elif os.path.exists("word2vec_sampled_50m.pth"):
-            checkpoint = "word2vec_sampled_50m.pth"
+        if os.path.exists(MODEL):
+            checkpoint = MODEL
+        elif os.path.exists(VOCAB):
+            checkpoint = VOCAB
         else:
             print("Error: No default model found (checked .safetensors and .pth)")
             sys.exit(1)
